@@ -2,8 +2,12 @@ options(repos = c(CRAN = "https://cran.r-project.org"))
 if (!requireNamespace("MatchIt", quietly = TRUE)) {
   install.packages("MatchIt")
 }
+if (!requireNamespace("collapse", quietly = TRUE)) {
+  install.packages("collapse")
+}
 
 library(MatchIt)
+library(collapse)
 # Baseline evaluations for replication based on original data
 
 # Define the subroutine
@@ -25,7 +29,7 @@ print(aggregate(ts4_ef21h$EF21H, list(ts4_ef21h$TAETIGKEITSSCHLUESSEL4), FUN=mea
 ts4_ef48 <- get_and_process_data("sdx_tables/ts4_ef48.csv")
 print(aggregate(ts4_ef48$EF48, list(ts4_ef48$TAETIGKEITSSCHLUESSEL4), FUN=mean))
 ts4_ef48_b52 <- get_and_process_data("sdx_tables/ts4_ef48_b52.csv")
-#(fmean(ts4_ef48_b52$EF48, ts4_ef48_b52$TAETIGKEITSSCHLUESSEL4, ts4_ef48_b52$B52))
+(fmean(ts4_ef48_b52$EF48, ts4_ef48_b52$TAETIGKEITSSCHLUESSEL4, ts4_ef48_b52$B52))
 
 # Weekly working hours grouped by (non-)/temporary work 
 ts4_ef19 <- get_and_process_data("sdx_tables/ts4_ef19.csv")
