@@ -1,0 +1,2 @@
+
+`build_syndiffix_tables.py` generates the SynDiffix synthetic datasets required by `evaluation_syndiffix_cleanred.R`. It reads in the file `test_data.csv`, creates the directory `sdx_tables`, and places all of the synthetic datasets there. 

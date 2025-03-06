@@ -1,17 +1,11 @@
 # Baseline evaluations for replication based on original data
 
-vse_AN_gwap_noNNA_PF$TAETIGKEITSSCHLUESSEL4 <- ifelse(vse_AN_gwap_noNNA_PF$TAETIGKEITSSCHLUESSEL4 == 1, 0,1)
-vse_AN_gwap_noNNA_PF$TAETIGKEITSSCHLUESSEL4 <- as.factor(vse_AN_gwap_noNNA_PF$TAETIGKEITSSCHLUESSEL4)
-
 # Gross monthly income grouped by (non-)/temporary work
 print(aggregate(vse_AN_gwap_noNNA_PF$EF21, list(vse_AN_gwap_noNNA_PF$TAETIGKEITSSCHLUESSEL4), FUN=mean))
 
 # Gross hourly income grouped by (non-)/temporary work
 vse_AN_gwap_noNNA_PF$EF21H <- vse_AN_gwap_noNNA_PF$EF21 / vse_AN_gwap_noNNA_PF$EF19
 print(aggregate(vse_AN_gwap_noNNA_PF$EF21H, list(vse_AN_gwap_noNNA_PF$TAETIGKEITSSCHLUESSEL4), FUN=mean))
-
-print(aggregate(vse_AN_gwap_noNNA_PF$EF48, list(vse_AN_gwap_noNNA_PF$TAETIGKEITSSCHLUESSEL4), FUN=mean))
-(fmean(vse_AN_gwap_noNNA_PF$EF48, vse_AN_gwap_noNNA_PF$TAETIGKEITSSCHLUESSEL4, vse_AN_gwap_noNNA_PF$B52))
 
 # Weekly working hours grouped by (non-)/temporary work 
 print(aggregate(vse_AN_gwap_noNNA_PF$EF19, list(vse_AN_gwap_noNNA_PF$TAETIGKEITSSCHLUESSEL4), FUN=mean)/4)
@@ -41,8 +35,6 @@ aggregate(vse_AN_gwap_noNNA_PF$LEISTUNGSGRUPPE_Helper, list(vse_AN_gwap_noNNA_PF
 aggregate(vse_AN_gwap_noNNA_PF$LEISTUNGSGRUPPE_Professional, list(vse_AN_gwap_noNNA_PF$TAETIGKEITSSCHLUESSEL4), FUN=mean)
 aggregate(vse_AN_gwap_noNNA_PF$LEISTUNGSGRUPPE_Specialist, list(vse_AN_gwap_noNNA_PF$TAETIGKEITSSCHLUESSEL4), FUN=mean)
 aggregate(vse_AN_gwap_noNNA_PF$LEISTUNGSGRUPPE_Expert, list(vse_AN_gwap_noNNA_PF$TAETIGKEITSSCHLUESSEL4), FUN=mean)
-
-
 
 # Level of education grouped by (non-)/temporary work
 table(vse_AN_gwap_noNNA_PF$EF16U2)
@@ -78,68 +70,3 @@ lm4_table1 <- lm(log(EF21) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B2
 summary(lm4_table1)
 
 '=> replication works, thus I refrain from replicating the remaining results as well'
-
-#### Propensity score matching, total
-m.out1 <- matchit(TAETIGKEITSSCHLUESSEL4 ~ EF41 + EF41_sq + EF10 + EF40 + 
-                    EF40_sq + EF16U2 + LEISTUNGSGRUPPE + B27_rec,
-                  data = vse_AN_gwap_noNNA_PF,
-                  method = "nearest",
-                  distance = "glm",
-                  link = "probit")
-m.data <- match.data(m.out1, drop.unmatched = FALSE)
-plot(m.out1, type = "density", interactive = FALSE,
-     which.xs = ~ EF41 + EF40)
-summary(m.out1, un = FALSE)
-
-fit <- lm(log(EF21) ~ TAETIGKEITSSCHLUESSEL4 + EF40 + EF40_sq + EF41 + EF41_sq +
-                            EF10 + EF16U2 + LEISTUNGSGRUPPE + B27_rec,
-          data = m.data,
-          weights = weights)
-fit
-summary(lm(log(EF21) ~ TAETIGKEITSSCHLUESSEL4,
-           data = vse_AN_gwap_noNNA_PF))
-
-fit_all <- lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF40 + EF40_sq + EF41 + EF41_sq +
-            EF10 + EF16U2 + LEISTUNGSGRUPPE + B27_rec,
-          data = m.data,
-          weights = weights)
-fit_all
-
-summary(lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4,
-           data = vse_AN_gwap_noNNA_PF))
-
-#### Propensity score matching, fulltime
-vse_AN_gwap_noNNA_PF_fulltime <-subset(vse_AN_gwap_noNNA_PF, TAETIGKEITSSCHLUESSEL5 == 1| TAETIGKEITSSCHLUESSEL5 == 3)
-
-'Propensity score matching and comparisons for matched and unmatched observations'
-m.out_O1a <- matchit(TAETIGKEITSSCHLUESSEL4 ~ EF41 + EF41_sq + EF10 + EF40 + 
-                    EF40_sq + EF16U2 + LEISTUNGSGRUPPE,
-                  data = vse_AN_gwap_noNNA_PF_fulltime,
-                  method = "nearest",
-                  distance = "glm",
-                  link = "probit")
-m.data_01a <- match.data(m.out_O1a, drop.unmatched = FALSE)
-plot(m.out_01a, type = "density", interactive = FALSE,
-     which.xs = ~ EF41 + EF40)
-summary(m.out_01a, un = FALSE)
-
-'Effect for matched observations'
-fit_O1a <- lm(log(EF21) ~ TAETIGKEITSSCHLUESSEL4 + EF40 + EF40_sq + EF41 + EF41_sq +
-            EF10 + EF16U2 + LEISTUNGSGRUPPE,
-          data = m.data_01a,
-          weights = weights)
-fit_O1a
-
-fit_O1b <- lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF40 + EF40_sq + EF41 + EF41_sq +
-                EF10 + EF16U2 + LEISTUNGSGRUPPE,
-              data = m.data_01a,
-              weights = weights)
-fit_O1b
-
-'Effect for unmatched observations'
-summary(lm(log(EF21) ~ TAETIGKEITSSCHLUESSEL4,
-           data = vse_AN_gwap_noNNA_PF_fulltime))
-
-summary(lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4,
-           data = vse_AN_gwap_noNNA_PF_fulltime))
-
