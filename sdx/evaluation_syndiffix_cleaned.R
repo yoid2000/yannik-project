@@ -13,8 +13,26 @@ library(collapse)
 # Define the subroutine
 get_and_process_data <- function(path) {
   df <- read.csv(path)
-  df$TAETIGKEITSSCHLUESSEL4 <- ifelse(df$TAETIGKEITSSCHLUESSEL4 == 1, 0, 1)
-  df$TAETIGKEITSSCHLUESSEL4 <- as.factor(df$TAETIGKEITSSCHLUESSEL4)
+  
+  if ("TAETIGKEITSSCHLUESSEL4" %in% colnames(df)) {
+    df$TAETIGKEITSSCHLUESSEL4 <- ifelse(df$TAETIGKEITSSCHLUESSEL4 == 1, 0, 1)
+    df$TAETIGKEITSSCHLUESSEL4 <- as.factor(df$TAETIGKEITSSCHLUESSEL4)
+  }
+# Filtering observations without employment subject to social security contributions (analogous to Bachmann et al. (2023)
+  if ("PERSONENGRUPPE" %in% colnames(df)) {
+    df <- subset(df, PERSONENGRUPPE == 101)
+  }
+
+# Filtering observations without information on educational level (analogous to Bachmann et al. (2023)
+  if ("EF16U2" %in% colnames(df)) {
+    df <- subset(df, EF16U2!=7)
+  }
+
+# Filtering observations younger than 17 and older than 62(analogous to Bachmann et al. (2023)
+  if ("EF41" %in% colnames(df)) {
+    df <- subset(df, EF41 > 16 & EF41<63)  
+  }
+
   return(df)
 }
 
