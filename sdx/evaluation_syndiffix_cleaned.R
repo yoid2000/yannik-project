@@ -5,139 +5,288 @@ if (!requireNamespace("MatchIt", quietly = TRUE)) {
 if (!requireNamespace("collapse", quietly = TRUE)) {
   install.packages("collapse")
 }
+if (!requireNamespace("synthpop", quietly = TRUE)) {
+  install.packages("synthpop")
+}
+if (!requireNamespace("jsonlite", quietly = TRUE)) {
+  install.packages("jsonlite")
+}
 
 library(MatchIt)
 library(collapse)
-# Baseline evaluations for replication based on original data
+library(synthpop)
+library(jsonlite)
 
-# Define the subroutine
-get_and_process_data <- function(path) {
+make_file_key <- function(columns, target = NULL) {
+  sorted_columns <- sort(columns)
+  key <- paste(sorted_columns, collapse = "__")
+  if (!is.null(target)) {
+    key <- paste0(key, "__tar__", target)
+  }
+  return(key)
+}
+# Example usage
+# result <- make_file_key(c("banana", "apple", "cherry"), "fruit")
+
+get_path <- function(key) {
+  if (key %in% names(filekeys)) {
+    return(filekeys[[key]])
+  } else {
+    stop(paste("Error: Key", key, "not found in filekeys"))
+  }
+}
+# result <- get_path(key)
+
+get_data <- function(columns, target = NULL) {
+  key <- make_file_key(columns, target = target)
+  path <- get_path(key)
   df <- read.csv(path)
+  df <- process_data(df)
+  return(df)
+}
+
+get_data_fulltime <- function(columns, target = NULL) {
+  columns <- c(columns, 'TAETIGKEITSSCHLUESSEL5')
+  return(get_data(columns, target = target))
+}
+
+# TO use:
+# df <- get_data(columns, target)
+
+'Creating a replica of the lm.synds function which is also providing the option to weight the results'
+lm.synds.weights <- function(formula, dataset, wghts){
+  if (!inherits(dataset, "synds")) 
+    stop("Data must have class synds\n", call. = FALSE)
+  if (is.matrix(dataset$method)) 
+    dataset$method <- dataset$method[1, ]
+  if (is.matrix(dataset$visit.sequence)) 
+    dataset$visit.sequence <- dataset$visit.sequence[1, ]
+  if (dataset$m > 1) 
+    vars <- names(dataset$syn[[1]])
+  else vars <- names(dataset$syn)
+  n <- sum(dataset$n)
+  if (is.list(dataset$k)) 
+    k <- sum(dataset$k[[1]])
+  else k <- sum(dataset$k)
+  call <- match.call()
+  fitting.function <- "lm"
   
+  analyses <- as.list(1:dataset$m)
+  coef <- 
+  if (dataset$m == 1) {
+    analyses[[1]] <- summary(lm(formula, data = dataset$syn, weights = dataset$syn$wghts))
+  } else {
+    for (i in 1:dataset$m){
+      analyses[[i]] <- summary(lm(formula, data = dataset$syn[[i]], weights = dataset$syn[[i]]$wghts))
+    }
+  }
+  'incomplete <- checkcomplete(vars, formula, dataset$visit.sequence, 
+                              dataset$method)
+  allcoefvar <- mcoefvar(analyses = analyses)
+  object <- list(call = call, mcoefavg = allcoefvar$mcoefavg, 
+                 mvaravg = allcoefvar$mvaravg, analyses = analyses, fitting.function = fitting.function, 
+                 n = n, k = k, proper = dataset$proper, m = dataset$m, method = dataset$method, 
+                 incomplete = incomplete, mcoef = allcoefvar$mcoef, mvar = allcoefvar$mvar)
+  class(object) <- "fit.synds"
+  return(object)'
+  coef <- coefficients(analyses[[1]])
+  for (i in 2:dataset$m){
+    coef <- coef + coefficients(analyses[[i]])
+  }
+  coef <- coef/dataset$m  
+  'print(analyses)'
+  cat("Call: \n")
+  print(call)
+  cat("\n")
+  cat("Average coefficient estimates from", dataset$m, "syntheses: \n")
+  print(coef)
+  #message("these are the mean coefficients:", coef)
+}
+
+process_data <- function(df) {
   if ("TAETIGKEITSSCHLUESSEL4" %in% colnames(df)) {
     df$TAETIGKEITSSCHLUESSEL4 <- ifelse(df$TAETIGKEITSSCHLUESSEL4 == 1, 0, 1)
     df$TAETIGKEITSSCHLUESSEL4 <- as.factor(df$TAETIGKEITSSCHLUESSEL4)
   }
-# Filtering observations without employment subject to social security contributions (analogous to Bachmann et al. (2023)
+  # Filtering observations without employment subject to social security contributions (analogous to Bachmann et al. (2023)
   if ("PERSONENGRUPPE" %in% colnames(df)) {
     df <- subset(df, PERSONENGRUPPE == 101)
   }
 
-# Filtering observations without information on educational level (analogous to Bachmann et al. (2023)
+  # Filtering observations without information on educational level (analogous to Bachmann et al. (2023)
   if ("EF16U2" %in% colnames(df)) {
     df <- subset(df, EF16U2!=7)
   }
 
-# Filtering observations younger than 17 and older than 62(analogous to Bachmann et al. (2023)
+  # Filtering observations younger than 17 and older than 62(analogous to Bachmann et al. (2023)
   if ("EF41" %in% colnames(df)) {
     df <- subset(df, EF41 > 16 & EF41<63)  
+    df$EF41_sq <- df$EF41*df$EF41
+  }
+
+  if ("EF40" %in% colnames(df)) {
+    df$EF40_sq <- df$EF40*df$EF40
+  }
+
+  if ("B27" %in% colnames(df)) {
+    df$B27_rec <- ifelse(df$B27 == "FT", 1, 0)
+  }
+
+  if ("TAETIGKEITSSCHLUESSEL5" %in% colnames(df)) {
+    df <- subset(df, TAETIGKEITSSCHLUESSEL5 == 1| TAETIGKEITSSCHLUESSEL5 == 3)
   }
 
   return(df)
 }
 
+'Read in filekeys list of files and their columns'
+filekeys <- fromJSON("sdx_tables/filekeys.json")
+
+'Replication of Bachmann et al. (2023), table 1'
 # Gross monthly income grouped by (non-)/temporary work
-ts4_ef21 <- get_and_process_data("sdx_tables/ts4_ef21.csv")
-print(aggregate(ts4_ef21$EF21, list(ts4_ef21$TAETIGKEITSSCHLUESSEL4), FUN=mean))
+df <- get_data(c("EF21", "TAETIGKEITSSCHLUESSEL4"))
+'print(aggregate(df$EF21, list(df$TAETIGKEITSSCHLUESSEL4), FUN=mean))'
+df <- get_data(c("EF21", "TAETIGKEITSSCHLUESSEL4", "B52"))
+(fmean(df$EF21, df$TAETIGKEITSSCHLUESSEL4, df$B52))
 
 # Gross hourly income grouped by (non-)/temporary work
-ts4_ef21h <- get_and_process_data("sdx_tables/ts4_ef21h.csv")
-print(aggregate(ts4_ef21h$EF21H, list(ts4_ef21h$TAETIGKEITSSCHLUESSEL4), FUN=mean))
+df <- get_data(c("EF21H", "TAETIGKEITSSCHLUESSEL4"))
+print(aggregate(df$EF21H, list(df$TAETIGKEITSSCHLUESSEL4), FUN=mean))
 
-ts4_ef48 <- get_and_process_data("sdx_tables/ts4_ef48.csv")
-print(aggregate(ts4_ef48$EF48, list(ts4_ef48$TAETIGKEITSSCHLUESSEL4), FUN=mean))
-ts4_ef48_b52 <- get_and_process_data("sdx_tables/ts4_ef48_b52.csv")
-(fmean(ts4_ef48_b52$EF48, ts4_ef48_b52$TAETIGKEITSSCHLUESSEL4, ts4_ef48_b52$B52))
+df <- get_data(c("EF48", "TAETIGKEITSSCHLUESSEL4"))
+print(aggregate(df$EF48, list(df$TAETIGKEITSSCHLUESSEL4), FUN=mean))
+df <- get_data(c("EF48", "TAETIGKEITSSCHLUESSEL4", "B52"))
+(fmean(df$EF48, df$TAETIGKEITSSCHLUESSEL4, df$B52))
 
 # Weekly working hours grouped by (non-)/temporary work 
-ts4_ef19 <- get_and_process_data("sdx_tables/ts4_ef19.csv")
-print(aggregate(ts4_ef19$EF19, list(ts4_ef19$TAETIGKEITSSCHLUESSEL4), FUN=mean)/4)
+df <- get_data(c("EF19", "TAETIGKEITSSCHLUESSEL4"))
+'print(aggregate(df$EF19, list(df$TAETIGKEITSSCHLUESSEL4), FUN=mean)/4)'
+df <- get_data(c("EF19", "TAETIGKEITSSCHLUESSEL4", "B52"))
+(fmean(df$EF19, df$TAETIGKEITSSCHLUESSEL4, df$B52)/4)
 
 # Age grouped by (non-)/temporary work
-ts4_ef41 <- get_and_process_data("sdx_tables/ts4_ef41.csv")
-aggregate(ts4_ef41$EF41, list(ts4_ef41$TAETIGKEITSSCHLUESSEL4), FUN=mean)
+df <- get_data(c("EF41", "TAETIGKEITSSCHLUESSEL4"))
+'aggregate(df$EF41, list(df$TAETIGKEITSSCHLUESSEL4), FUN=mean)'
+df <- get_data(c("EF41", "TAETIGKEITSSCHLUESSEL4", "B52"))
+(fmean(df$EF41, df$TAETIGKEITSSCHLUESSEL4, df$B52))
 
 # Gender grouped by (non-)/temporary work
-ts4_ef10 <- get_and_process_data("sdx_tables/ts4_ef10.csv")
-aggregate(ts4_ef10$EF10, list(ts4_ef10$TAETIGKEITSSCHLUESSEL4), FUN=mean)-1
+df <- get_data(c("EF10", "TAETIGKEITSSCHLUESSEL4"))
+'aggregate(df$EF10, list(df$TAETIGKEITSSCHLUESSEL4), FUN=mean)-1'
+df <- get_data(c("EF10", "TAETIGKEITSSCHLUESSEL4", "B52"))
+(fmean(df$EF10, df$TAETIGKEITSSCHLUESSEL4, df$B52)-1)
 
 # Full /part time grouped by (non-)/temporary work
-ts4_b27 <- get_and_process_data("sdx_tables/ts4_b27.csv")
-table(ts4_b27$B27)
-ts4_b27$B27_rec <- ifelse(ts4_b27$B27 == "FT", 1, 0)
-table(ts4_b27$B27_rec)
-aggregate(ts4_b27$B27_rec, list(ts4_b27$TAETIGKEITSSCHLUESSEL4), FUN=mean)
+df <- get_data(c("B27", "TAETIGKEITSSCHLUESSEL4"))
+table(df$B27)
+table(df$B27_rec)
+'aggregate(df$B27_rec, list(df$TAETIGKEITSSCHLUESSEL4), FUN=mean)'
+df <- get_data(c("B27", "TAETIGKEITSSCHLUESSEL4", "B52"))
+table(df$B27_rec)
+(fmean(df$B27_rec, df$TAETIGKEITSSCHLUESSEL4, df$B52)-1)
 
 # Months of service for the company
-ts4_mos <- get_and_process_data("sdx_tables/ts4_mos.csv")
-aggregate(ts4_mos$months_of_service, list(ts4_mos$TAETIGKEITSSCHLUESSEL4), FUN=mean)*12
+df <- get_data(c("MONTHS_OF_SERVICE", "TAETIGKEITSSCHLUESSEL4"))
+'aggregate(df$MONTHS_OF_SERVICE, list(df$TAETIGKEITSSCHLUESSEL4), FUN=mean)*12'
+df <- get_data(c("MONTHS_OF_SERVICE", "TAETIGKEITSSCHLUESSEL4", "B52"))
+(fmean(df$MONTHS_OF_SERVICE, df$TAETIGKEITSSCHLUESSEL4, df$B52)*12)
 
 # Level of requirements grouped by (non-)/temporary work
 # Note we are not preprocessing here
-ts4_lg <- get_and_process_data("sdx_tables/ts4_lg.csv")
-ts4_lg$LEISTUNGSGRUPPE_Helper <- ifelse(ts4_lg$LEISTUNGSGRUPPE == 4 | ts4_lg$LEISTUNGSGRUPPE == 5, 1, 0) 
-ts4_lg$LEISTUNGSGRUPPE_Professional <- ifelse(ts4_lg$LEISTUNGSGRUPPE == 3| ts4_lg$LEISTUNGSGRUPPE == 6, 1, 0) 
-ts4_lg$LEISTUNGSGRUPPE_Specialist <- ifelse(ts4_lg$LEISTUNGSGRUPPE == 2, 1, 0)
-ts4_lg$LEISTUNGSGRUPPE_Expert <- ifelse(ts4_lg$LEISTUNGSGRUPPE == 1, 1, 0)
+df <- get_data(c("LEISTUNGSGRUPPE", "TAETIGKEITSSCHLUESSEL4"))
+df$LEISTUNGSGRUPPE_Helper <- ifelse(df$LEISTUNGSGRUPPE == 4 | df$LEISTUNGSGRUPPE == 5, 1, 0) 
+df$LEISTUNGSGRUPPE_Professional <- ifelse(df$LEISTUNGSGRUPPE == 3| df$LEISTUNGSGRUPPE == 6, 1, 0) 
+df$LEISTUNGSGRUPPE_Specialist <- ifelse(df$LEISTUNGSGRUPPE == 2, 1, 0)
+df$LEISTUNGSGRUPPE_Expert <- ifelse(df$LEISTUNGSGRUPPE == 1, 1, 0)
 
-aggregate(ts4_lg$LEISTUNGSGRUPPE_Helper, list(ts4_lg$TAETIGKEITSSCHLUESSEL4), FUN=mean)
-aggregate(ts4_lg$LEISTUNGSGRUPPE_Professional, list(ts4_lg$TAETIGKEITSSCHLUESSEL4), FUN=mean)
-aggregate(ts4_lg$LEISTUNGSGRUPPE_Specialist, list(ts4_lg$TAETIGKEITSSCHLUESSEL4), FUN=mean)
-aggregate(ts4_lg$LEISTUNGSGRUPPE_Expert, list(ts4_lg$TAETIGKEITSSCHLUESSEL4), FUN=mean)
+df_b <- get_data(c("LEISTUNGSGRUPPE", "TAETIGKEITSSCHLUESSEL4", "B52"))
+df_b$LEISTUNGSGRUPPE_Helper <- ifelse(df_b$LEISTUNGSGRUPPE == 4 | df_b$LEISTUNGSGRUPPE == 5, 1, 0) 
+df_b$LEISTUNGSGRUPPE_Professional <- ifelse(df_b$LEISTUNGSGRUPPE == 3| df_b$LEISTUNGSGRUPPE == 6, 1, 0) 
+df_b$LEISTUNGSGRUPPE_Specialist <- ifelse(df_b$LEISTUNGSGRUPPE == 2, 1, 0)
+df_b$LEISTUNGSGRUPPE_Expert <- ifelse(df_b$LEISTUNGSGRUPPE == 1, 1, 0)
+
+'aggregate(df$LEISTUNGSGRUPPE_Helper, list(df$TAETIGKEITSSCHLUESSEL4), FUN=mean)'
+(fmean(df_b$LEISTUNGSGRUPPE_Helper, df_b$TAETIGKEITSSCHLUESSEL4, df_b$B52))
+'aggregate(df$LEISTUNGSGRUPPE_Professional, list(df$TAETIGKEITSSCHLUESSEL4), FUN=mean)'
+(fmean(df_b$LEISTUNGSGRUPPE_Professional, df_b$TAETIGKEITSSCHLUESSEL4, df_b$B52))
+'aggregate(df$LEISTUNGSGRUPPE_Specialist, list(df$TAETIGKEITSSCHLUESSEL4), FUN=mean)'
+(fmean(df_b$LEISTUNGSGRUPPE_Specialist, df_b$TAETIGKEITSSCHLUESSEL4, df_b$B52))
+'aggregate(df$LEISTUNGSGRUPPE_Expert, list(df$TAETIGKEITSSCHLUESSEL4), FUN=mean)'
+(fmean(df_b$LEISTUNGSGRUPPE_Expert, df_b$TAETIGKEITSSCHLUESSEL4, df_b$B52))
 
 # Level of education grouped by (non-)/temporary work
 # No preprocessing
-ts4_ef16u2 <- get_and_process_data("sdx_tables/ts4_ef16u2.csv")
-table(ts4_ef16u2$EF16U2)
-ts4_ef16u2$EF16U2_1 <- ifelse(ts4_ef16u2$EF16U2 == 1, 1, 0) 
-ts4_ef16u2$EF16U2_2 <- ifelse(ts4_ef16u2$EF16U2 == 2, 1, 0) 
-ts4_ef16u2$EF16U2_3 <- ifelse(ts4_ef16u2$EF16U2 == 3, 1, 0) 
-ts4_ef16u2$EF16U2_4 <- ifelse(ts4_ef16u2$EF16U2 == 4, 1, 0) 
-ts4_ef16u2$EF16U2_5 <- ifelse(ts4_ef16u2$EF16U2 == 5 | ts4_ef16u2$EF16U2 == 6, 1, 0) 
+df <- get_data(c("EF16U2", "TAETIGKEITSSCHLUESSEL4"))
+table(df$EF16U2)
+df$EF16U2_1 <- ifelse(df$EF16U2 == 1, 1, 0) 
+df$EF16U2_2 <- ifelse(df$EF16U2 == 2, 1, 0) 
+df$EF16U2_3 <- ifelse(df$EF16U2 == 3, 1, 0) 
+df$EF16U2_4 <- ifelse(df$EF16U2 == 4, 1, 0) 
+df$EF16U2_5 <- ifelse(df$EF16U2 == 5 | df$EF16U2 == 6, 1, 0) 
 
-aggregate(ts4_ef16u2$EF16U2_1, list(ts4_ef16u2$TAETIGKEITSSCHLUESSEL4), FUN=mean)
-aggregate(ts4_ef16u2$EF16U2_2, list(ts4_ef16u2$TAETIGKEITSSCHLUESSEL4), FUN=mean)
-aggregate(ts4_ef16u2$EF16U2_3, list(ts4_ef16u2$TAETIGKEITSSCHLUESSEL4), FUN=mean)
-aggregate(ts4_ef16u2$EF16U2_4, list(ts4_ef16u2$TAETIGKEITSSCHLUESSEL4), FUN=mean)
-aggregate(ts4_ef16u2$EF16U2_5, list(ts4_ef16u2$TAETIGKEITSSCHLUESSEL4), FUN=mean)
+df_b <- get_data(c("EF16U2", "TAETIGKEITSSCHLUESSEL4", "B52"))
+table(df_b$EF16U2)
+df_b$EF16U2_1 <- ifelse(df_b$EF16U2 == 1, 1, 0) 
+df_b$EF16U2_2 <- ifelse(df_b$EF16U2 == 2, 1, 0) 
+df_b$EF16U2_3 <- ifelse(df_b$EF16U2 == 3, 1, 0) 
+df_b$EF16U2_4 <- ifelse(df_b$EF16U2 == 4, 1, 0) 
+df_b$EF16U2_5 <- ifelse(df_b$EF16U2 == 5 | df_b$EF16U2 == 6, 1, 0) 
+
+'aggregate(df$EF16U2_1, list(df$TAETIGKEITSSCHLUESSEL4), FUN=mean)'
+(fmean(df_b$EF16U2_1, df_b$TAETIGKEITSSCHLUESSEL4, df_b$B52))
+'aggregate(df$EF16U2_2, list(df$TAETIGKEITSSCHLUESSEL4), FUN=mean)'
+(fmean(df_b$EF16U2_2, df_b$TAETIGKEITSSCHLUESSEL4, df_b$B52))
+'aggregate(df$EF16U2_3, list(df$TAETIGKEITSSCHLUESSEL4), FUN=mean)'
+(fmean(df_b$EF16U2_3, df_b$TAETIGKEITSSCHLUESSEL4, df_b$B52))
+'aggregate(df$EF16U2_4, list(df$TAETIGKEITSSCHLUESSEL4), FUN=mean)'
+(fmean(df_b$EF16U2_4, df_b$TAETIGKEITSSCHLUESSEL4, df_b$B52))
+'aggregate(df$EF16U2_5, list(df$TAETIGKEITSSCHLUESSEL4), FUN=mean)'
+(fmean(df_b$EF16U2_5, df_b$TAETIGKEITSSCHLUESSEL4, df_b$B52))
 
 'Replication of Bachmann et al. (2023), table 3'
 'Column 1'
-ts4_ef21_b52 <- get_and_process_data("sdx_tables/ts4_ef21_b52.csv")
-lm1_table1 <- lm(log(EF21) ~ TAETIGKEITSSCHLUESSEL4, data = ts4_ef21_b52, weights = B52)
+df <- get_data(c("EF21", "TAETIGKEITSSCHLUESSEL4", "B52"))
+lm1_table1 <- lm(log(EF21) ~ TAETIGKEITSSCHLUESSEL4, data = df, weights = B52)
 summary(lm1_table1)
 
 'Column 2'
-col2_group <- get_and_process_data("sdx_tables/ts4_ef41_ef10_ef40_b27_tar_ef21.csv")
-col2_group$EF41_sq <- col2_group$EF41*col2_group$EF41
-col2_group$EF40_sq <- col2_group$EF40*col2_group$EF40
-# Note: have to recreate B27_rec here again, because different synthetic table from before
-col2_group$B27_rec <- ifelse(col2_group$B27 == "FT", 1, 0)
-lm2_table1 <- lm(log(EF21) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq, data = col2_group)
+df <- get_data(c("EF21", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40"), target="EF21")
+lm2_table1 <- lm(log(EF21) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq, data = df)
 summary(lm2_table1)
 
 'Column 3'
-col3_group <- get_and_process_data("sdx_tables/ts4_ef41_ef10_ef40_b27_ef16u2_tar_ef21.csv")
-col3_group$EF41_sq <- col3_group$EF41*col3_group$EF41
-col3_group$EF40_sq <- col3_group$EF40*col3_group$EF40
-col3_group$B27_rec <- ifelse(col3_group$B27 == "FT", 1, 0)
-lm3_table1 <- lm(log(EF21) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2, data = col3_group)
+df <- get_data(c("EF21", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40", "EF16U2"), target="EF21")
+lm3_table1 <- lm(log(EF21) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2, data = df)
 summary(lm3_table1)
 
 'Column 4'
-col4_group <- get_and_process_data("sdx_tables/ts4_ef41_ef10_ef40_b27_ef16u2_lg_tar_ef21.csv")
-col4_group$EF41_sq <- col4_group$EF41*col4_group$EF41
-col4_group$EF40_sq <- col4_group$EF40*col4_group$EF40
-col4_group$B27_rec <- ifelse(col4_group$B27 == "FT", 1, 0)
-lm4_table1 <- lm(log(EF21) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2 + LEISTUNGSGRUPPE, data = col4_group)
+df <- get_data(c("EF21", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40", "EF16U2", "LEISTUNGSGRUPPE"), target="EF21")
+lm4_table1 <- lm(log(EF21) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2 + LEISTUNGSGRUPPE, data = df)
 summary(lm4_table1)
 
-'=> replication works, thus I refrain from replicating the remaining results as well'
+'Replication of Bachmann et al. (2023), table 4'
+'Column 1'
+df_ft <- get_data_fulltime(c("EF21", "TAETIGKEITSSCHLUESSEL4", "B52"))
+summary(lm(log(EF21) ~ TAETIGKEITSSCHLUESSEL4, data = df_ft, weights = B52))
 
+'Column 2'
+df_ft <- get_data_fulltime(c("EF21", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40", "B52"), target="EF21")
+summary(lm(log(EF21) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq, data = df_ft, weights = B52))
+
+'Column 3'
+df_ft <- get_data_fulltime(c("EF21", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40", "EF16U2"), target="EF21")
+summary(lm(log(EF21) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2, data = df_ft))
+
+'Column 4'
+df_ft <- get_data_fulltime(c("EF21", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40", "EF16U2", "LEISTUNGSGRUPPE"), target="EF21")
+summary(lm(log(EF21) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2 + LEISTUNGSGRUPPE, data = df_ft))
+
+'Replication of Bachmann et al. (2023), figure 1'
 #### Propensity score matching, total
+df <- get_data(c("EF21", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40", "EF16U2", "LEISTUNGSGRUPPE"), target="EF21")
 m.out1 <- matchit(TAETIGKEITSSCHLUESSEL4 ~ EF41 + EF41_sq + EF10 + EF40 + 
                     EF40_sq + EF16U2 + LEISTUNGSGRUPPE + B27_rec,
-                  data = col4_group,
+                  data = df,
                   method = "nearest",
                   distance = "glm",
                   link = "probit")
@@ -152,18 +301,15 @@ fit <- lm(log(EF21) ~ TAETIGKEITSSCHLUESSEL4 + EF40 + EF40_sq + EF41 + EF41_sq +
           weights = weights)
 fit
 
-# Here we are using the ts4_ef21 synthetic table that we read in earlier
+df <- get_data(c("EF21", "TAETIGKEITSSCHLUESSEL4"))
 summary(lm(log(EF21) ~ TAETIGKEITSSCHLUESSEL4,
-           data = ts4_ef21))
+           data = df))
 
-ef48_group <- get_and_process_data("sdx_tables/ts4_ef41_ef10_ef40_b27_ef16u2_lg_tar_ef48.csv")
-ef48_group$EF41_sq <- ef48_group$EF41*ef48_group$EF41
-ef48_group$EF40_sq <- ef48_group$EF40*ef48_group$EF40
-ef48_group$B27_rec <- ifelse(ef48_group$B27 == "FT", 1, 0)
+df <- get_data(c("TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "EF40", "EF16U2", "LEISTUNGSGRUPPE", "B27", "EF48"), target="EF48")
 
 m.out2 <- matchit(TAETIGKEITSSCHLUESSEL4 ~ EF41 + EF41_sq + EF10 + EF40 + 
                     EF40_sq + EF16U2 + LEISTUNGSGRUPPE + B27_rec,
-                  data = ef48_group,
+                  data = df,
                   method = "nearest",
                   distance = "glm",
                   link = "probit")
@@ -174,21 +320,85 @@ fit_all <- lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF40 + EF40_sq + EF41 + EF41_
           weights = weights)
 fit_all
 
-# Use the ts4_ef48 synthetic table that we read in earlier
+df <- get_data(c("EF48", "TAETIGKEITSSCHLUESSEL4"))
 summary(lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4,
-           data = ts4_ef48))
+           data = df))
 
+
+### Descriptive and econometric analyses on gross hourly wage
+'Replication of Bachmann et al. (2023), table 5'
+# Gross monthly income grouped by (non-)/temporary work, fulltime
+df_ft <- get_data_fulltime(c("EF21", "TAETIGKEITSSCHLUESSEL4", "B52"))
+(fmean(df_ft$EF21, df_ft$TAETIGKEITSSCHLUESSEL4, df_ft$B52))
+
+# Gross hourly income grouped by (non-)/temporary work, fulltime
+df_ft <- get_data_fulltime(c("EF48", "TAETIGKEITSSCHLUESSEL4", "B52"))
+(fmean(df_ft$EF48, df_ft$TAETIGKEITSSCHLUESSEL4, df_ft$B52))
+
+'Replication of Bachmann et al. (2023), table 6'
+'Column 1'
+df <- get_data(c("EF48", "TAETIGKEITSSCHLUESSEL4", "B52"))
+lm.synds(log(EF48) ~ TAETIGKEITSSCHLUESSEL4, df)
+lm.synds.weights(log(EF48) ~ TAETIGKEITSSCHLUESSEL4, df, B52)
+
+'Column 2'
+df <- get_data(c("EF48", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40"), target="EF48")
+table(df$B27_rec)
+lm.synds(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq, df)
+
+df <- get_data(c("EF48", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40", "B52"), target="EF48")
+table(df$B27_rec)
+lm.synds.weights(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq, df, B52)
+
+'Column 3'
+df <- get_data(c("EF48", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40", "EF16U2"), target="EF48")
+table(df$B27_rec)
+lm.synds(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2, df)
+df <- get_data(c("EF48", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40", "B52", "EF16U2"), target="EF48")
+table(df$B27_rec)
+lm.synds.weights(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2, df, B52)
+
+'Column 4'
+df <- get_data(c("TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "EF40", "EF16U2", "LEISTUNGSGRUPPE", "B27", "EF48"), target="EF48")
+lm.synds(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2 + LEISTUNGSGRUPPE, df)
+df <- get_data(c("TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "EF40", "EF16U2", "LEISTUNGSGRUPPE", "B27", "EF48", "B52"), target="EF48")
+table(df$B27_rec)
+lm.synds.weights(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2 + LEISTUNGSGRUPPE, df, B52)
+
+'Replication of Bachmann et al. (2023), table 7'
+'Column 1'
+df_ft <- get_data_fulltime(c("EF48", "TAETIGKEITSSCHLUESSEL4"))
+lm.synds(log(EF48) ~ TAETIGKEITSSCHLUESSEL4, df_ft)
+df_ft <- get_data_fulltime(c("EF48", "TAETIGKEITSSCHLUESSEL4", "B52"))
+lm.synds.weights(log(EF48) ~ TAETIGKEITSSCHLUESSEL4, df_ft, B52)
+
+'Column 2'
+df_ft <- get_data_fulltime(c("EF48", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40"), target="EF48")
+lm.synds(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq, df_ft)
+df_ft <- get_data_fulltime(c("EF48", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40", "B52"), target="EF48")
+lm.synds.weights(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq, df_ft, B52)
+
+'Column 3'
+df_ft <- get_data_fulltime(c("EF48", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40", "EF16U2"), target="EF48")
+lm.synds(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2, df_ft)
+df_ft <- get_data_fulltime(c("EF48", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40", "B52", "EF16U2"), target="EF48")
+lm.synds.weights(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2, df_ft, B52)
+
+'Column 4'
+df_ft <- get_data_fulltime(c("TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "EF40", "EF16U2", "LEISTUNGSGRUPPE", "B27", "EF48"), target="EF48")
+lm.synds(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2 + LEISTUNGSGRUPPE, df_ft)
+df_ft <- get_data_fulltime(c("TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "EF40", "EF16U2", "LEISTUNGSGRUPPE", "B27", "EF48", "B52"), target="EF48")
+lm.synds.weights(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2 + LEISTUNGSGRUPPE, df_ft, B52)
+
+
+'Replication of Bachmann et al. (2023), figure 2'
 #### Propensity score matching, fulltime
-ft_group_ef21 <- get_and_process_data("sdx_tables/ts4_ts5_ef41_ef10_ef40_ef16u2_lg_tar_ef21.csv")
-# Note that we didn't preprocess TAETIGKEITSSCHLUESSEL5 prior to synthesis 
-ft_group_ef21 <-subset(ft_group_ef21, TAETIGKEITSSCHLUESSEL5 == 1| TAETIGKEITSSCHLUESSEL5 == 3)
+df_ft <- get_data_fulltime(c("EF21", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "EF40", "EF16U2", "LEISTUNGSGRUPPE"), target="EF21")
 
 'Propensity score matching and comparisons for matched and unmatched observations'
-ft_group_ef21$EF41_sq <- ft_group_ef21$EF41*ft_group_ef21$EF41
-ft_group_ef21$EF40_sq <- ft_group_ef21$EF40*ft_group_ef21$EF40
 m.out_01a <- matchit(TAETIGKEITSSCHLUESSEL4 ~ EF41 + EF41_sq + EF10 + EF40 + 
                     EF40_sq + EF16U2 + LEISTUNGSGRUPPE,
-                  data = ft_group_ef21,
+                  data = df_ft,
                   method = "nearest",
                   distance = "glm",
                   link = "probit")
@@ -206,15 +416,12 @@ fit_01a
 
 # Because we are going to fit on EF48, we are repeating the above steps with a
 # synthetic table targeting EF48 rather tna EF21
-ft_group_ef48 <- get_and_process_data("sdx_tables/ts4_ts5_ef41_ef10_ef40_ef16u2_lg_tar_ef48.csv")
-ft_group_ef48 <-subset(ft_group_ef48, TAETIGKEITSSCHLUESSEL5 == 1| TAETIGKEITSSCHLUESSEL5 == 3)
+df_ft <- get_data_fulltime(c("EF48", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "EF40", "EF16U2", "LEISTUNGSGRUPPE"), target="EF48")
 
 'Propensity score matching and comparisons for matched and unmatched observations'
-ft_group_ef48$EF41_sq <- ft_group_ef48$EF41*ft_group_ef48$EF41
-ft_group_ef48$EF40_sq <- ft_group_ef48$EF40*ft_group_ef48$EF40
 m.out_02a <- matchit(TAETIGKEITSSCHLUESSEL4 ~ EF41 + EF41_sq + EF10 + EF40 + 
                     EF40_sq + EF16U2 + LEISTUNGSGRUPPE,
-                  data = ft_group_ef48,
+                  data = df_ft,
                   method = "nearest",
                   distance = "glm",
                   link = "probit")
@@ -229,13 +436,11 @@ fit_02b <- lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF40 + EF40_sq + EF41 + EF41_
 fit_02b
 
 'Effect for unmatched observations'
-ts4_ts5_ef21 <- get_and_process_data("sdx_tables/ts4_ts5_ef21.csv")
-ts4_ts5_ef21_full <-subset(ts4_ts5_ef21, TAETIGKEITSSCHLUESSEL5 == 1| TAETIGKEITSSCHLUESSEL5 == 3)
+df_ft <- get_data_fulltime(c("EF21", "TAETIGKEITSSCHLUESSEL4"))
 summary(lm(log(EF21) ~ TAETIGKEITSSCHLUESSEL4,
-           data = ts4_ts5_ef21_full))
+           data = df_ft))
 
-ts4_ts5_ef48 <- get_and_process_data("sdx_tables/ts4_ts5_ef48.csv")
-ts4_ts5_ef48_full <-subset(ts4_ts5_ef48, TAETIGKEITSSCHLUESSEL5 == 1| TAETIGKEITSSCHLUESSEL5 == 3)
+df_ft <- get_data_fulltime(c("EF48", "TAETIGKEITSSCHLUESSEL4"))
 summary(lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4,
-           data = ts4_ts5_ef48_full))
+           data = df_ft))
 

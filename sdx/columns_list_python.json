@@ -1,0 +1,134 @@
+[
+  {
+    "columns": ["EF21", "TAETIGKEITSSCHLUESSEL4"],
+    "target": null
+  },
+  {
+    "columns": ["EF21", "TAETIGKEITSSCHLUESSEL4", "B52"],
+    "target": null
+  },
+  {
+    "columns": ["EF21H", "TAETIGKEITSSCHLUESSEL4"],
+    "target": null
+  },
+  {
+    "columns": ["EF48", "TAETIGKEITSSCHLUESSEL4"],
+    "target": null
+  },
+  {
+    "columns": ["EF48", "TAETIGKEITSSCHLUESSEL4", "B52"],
+    "target": null
+  },
+  {
+    "columns": ["EF19", "TAETIGKEITSSCHLUESSEL4"],
+    "target": null
+  },
+  {
+    "columns": ["EF19", "TAETIGKEITSSCHLUESSEL4", "B52"],
+    "target": null
+  },
+  {
+    "columns": ["EF41", "TAETIGKEITSSCHLUESSEL4"],
+    "target": null
+  },
+  {
+    "columns": ["EF41", "TAETIGKEITSSCHLUESSEL4", "B52"],
+    "target": null
+  },
+  {
+    "columns": ["EF10", "TAETIGKEITSSCHLUESSEL4"],
+    "target": null
+  },
+  {
+    "columns": ["EF10", "TAETIGKEITSSCHLUESSEL4", "B52"],
+    "target": null
+  },
+  {
+    "columns": ["B27", "TAETIGKEITSSCHLUESSEL4"],
+    "target": null
+  },
+  {
+    "columns": ["B27", "TAETIGKEITSSCHLUESSEL4", "B52"],
+    "target": null
+  },
+  {
+    "columns": ["MONTHS_OF_SERVICE", "TAETIGKEITSSCHLUESSEL4"],
+    "target": null
+  },
+  {
+    "columns": ["MONTHS_OF_SERVICE", "TAETIGKEITSSCHLUESSEL4", "B52"],
+    "target": null
+  },
+  {
+    "columns": ["LEISTUNGSGRUPPE", "TAETIGKEITSSCHLUESSEL4"],
+    "target": null
+  },
+  {
+    "columns": ["LEISTUNGSGRUPPE", "TAETIGKEITSSCHLUESSEL4", "B52"],
+    "target": null
+  },
+  {
+    "columns": ["EF16U2", "TAETIGKEITSSCHLUESSEL4"],
+    "target": null
+  },
+  {
+    "columns": ["EF16U2", "TAETIGKEITSSCHLUESSEL4", "B52"],
+    "target": null
+  },
+  {
+    "columns": ["EF21", "TAETIGKEITSSCHLUESSEL4",  "EF41", "EF10", "B27", "EF40"],
+    "target": "EF21"
+  },
+  {
+    "columns": ["EF21", "TAETIGKEITSSCHLUESSEL4",  "EF41", "EF10", "B27", "EF40", "B52"],
+    "target": "EF21"
+  },
+  {
+    "columns": ["EF21", "TAETIGKEITSSCHLUESSEL4",  "EF41", "EF10", "B27", "EF40", "EF16U2"],
+    "target": "EF21"
+  },
+  {
+    "columns": ["EF21", "TAETIGKEITSSCHLUESSEL4",  "EF41", "EF10", "B27", "EF40", "EF16U2", "LEISTUNGSGRUPPE"],
+    "target": "EF21"
+  },
+  {
+    "columns": ["EF48", "TAETIGKEITSSCHLUESSEL4",  "EF41", "EF10", "B27", "EF40", "EF16U2"],
+    "target": "EF48"
+  },
+  {
+    "columns": ["EF48", "TAETIGKEITSSCHLUESSEL4",  "EF41", "EF10", "B27", "EF40", "B52", "EF16U2"],
+    "target": "EF48"
+  },
+  {
+    "columns": ["TAETIGKEITSSCHLUESSEL4",  "EF41", "EF10", "EF40", "EF16U2", "LEISTUNGSGRUPPE", "B27", "EF48"],
+    "target": "EF48"
+  },
+  {
+    "columns": ["TAETIGKEITSSCHLUESSEL4",  "EF41", "EF10", "EF40", "EF16U2", "LEISTUNGSGRUPPE", "B27", "EF48", "B52"],
+    "target": "EF48"
+  },
+  {
+    "columns": ["EF48", "TAETIGKEITSSCHLUESSEL4",  "EF41", "EF10", "B27", "EF40"],
+    "target": "EF48"
+  },
+  {
+    "columns": ["EF48", "TAETIGKEITSSCHLUESSEL4",  "EF41", "EF10", "B27", "EF40", "B52"],
+    "target": "EF48"
+  },
+  {
+    "columns": ["TAETIGKEITSSCHLUESSEL4",  "EF41", "EF10", "EF40", "EF16U2", "LEISTUNGSGRUPPE", "B27"],
+    "target": "TAETIGKEITSSCHLUESSEL4"
+  },
+  {
+    "columns": ["TAETIGKEITSSCHLUESSEL4",  "EF41", "EF10", "EF40", "EF16U2", "LEISTUNGSGRUPPE"],
+    "target": "TAETIGKEITSSCHLUESSEL4"
+  },
+  {
+    "columns": ["EF21", "TAETIGKEITSSCHLUESSEL4",  "EF41", "EF10", "EF40", "EF16U2", "LEISTUNGSGRUPPE"],
+    "target": "EF21"
+  },
+  {
+    "columns": ["EF48", "TAETIGKEITSSCHLUESSEL4",  "EF41", "EF10", "EF40", "EF16U2", "LEISTUNGSGRUPPE"],
+    "target": "EF48"
+  }
+]
