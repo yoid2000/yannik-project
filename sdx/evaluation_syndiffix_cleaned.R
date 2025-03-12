@@ -5,16 +5,12 @@ if (!requireNamespace("MatchIt", quietly = TRUE)) {
 if (!requireNamespace("collapse", quietly = TRUE)) {
   install.packages("collapse")
 }
-if (!requireNamespace("synthpop", quietly = TRUE)) {
-  install.packages("synthpop")
-}
 if (!requireNamespace("jsonlite", quietly = TRUE)) {
   install.packages("jsonlite")
 }
 
 library(MatchIt)
 library(collapse)
-library(synthpop)
 library(jsonlite)
 
 make_file_key <- function(columns, target = NULL) {
@@ -52,56 +48,6 @@ get_data_fulltime <- function(columns, target = NULL) {
 
 # TO use:
 # df <- get_data(columns, target)
-
-'Creating a replica of the lm.synds function which is also providing the option to weight the results'
-lm.synds.weights <- function(formula, dataset, wghts){
-  if (!inherits(dataset, "synds")) 
-    stop("Data must have class synds\n", call. = FALSE)
-  if (is.matrix(dataset$method)) 
-    dataset$method <- dataset$method[1, ]
-  if (is.matrix(dataset$visit.sequence)) 
-    dataset$visit.sequence <- dataset$visit.sequence[1, ]
-  if (dataset$m > 1) 
-    vars <- names(dataset$syn[[1]])
-  else vars <- names(dataset$syn)
-  n <- sum(dataset$n)
-  if (is.list(dataset$k)) 
-    k <- sum(dataset$k[[1]])
-  else k <- sum(dataset$k)
-  call <- match.call()
-  fitting.function <- "lm"
-  
-  analyses <- as.list(1:dataset$m)
-  coef <- 
-  if (dataset$m == 1) {
-    analyses[[1]] <- summary(lm(formula, data = dataset$syn, weights = dataset$syn$wghts))
-  } else {
-    for (i in 1:dataset$m){
-      analyses[[i]] <- summary(lm(formula, data = dataset$syn[[i]], weights = dataset$syn[[i]]$wghts))
-    }
-  }
-  'incomplete <- checkcomplete(vars, formula, dataset$visit.sequence, 
-                              dataset$method)
-  allcoefvar <- mcoefvar(analyses = analyses)
-  object <- list(call = call, mcoefavg = allcoefvar$mcoefavg, 
-                 mvaravg = allcoefvar$mvaravg, analyses = analyses, fitting.function = fitting.function, 
-                 n = n, k = k, proper = dataset$proper, m = dataset$m, method = dataset$method, 
-                 incomplete = incomplete, mcoef = allcoefvar$mcoef, mvar = allcoefvar$mvar)
-  class(object) <- "fit.synds"
-  return(object)'
-  coef <- coefficients(analyses[[1]])
-  for (i in 2:dataset$m){
-    coef <- coef + coefficients(analyses[[i]])
-  }
-  coef <- coef/dataset$m  
-  'print(analyses)'
-  cat("Call: \n")
-  print(call)
-  cat("\n")
-  cat("Average coefficient estimates from", dataset$m, "syntheses: \n")
-  print(coef)
-  #message("these are the mean coefficients:", coef)
-}
 
 process_data <- function(df) {
   if ("TAETIGKEITSSCHLUESSEL4" %in% colnames(df)) {
@@ -338,57 +284,57 @@ df_ft <- get_data_fulltime(c("EF48", "TAETIGKEITSSCHLUESSEL4", "B52"))
 'Replication of Bachmann et al. (2023), table 6'
 'Column 1'
 df <- get_data(c("EF48", "TAETIGKEITSSCHLUESSEL4", "B52"))
-lm.synds(log(EF48) ~ TAETIGKEITSSCHLUESSEL4, df)
-lm.synds.weights(log(EF48) ~ TAETIGKEITSSCHLUESSEL4, df, B52)
+lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4, data=df)
+lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4, df, weights = B52)
 
 'Column 2'
 df <- get_data(c("EF48", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40"), target="EF48")
 table(df$B27_rec)
-lm.synds(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq, df)
+lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq, data=df)
 
 df <- get_data(c("EF48", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40", "B52"), target="EF48")
 table(df$B27_rec)
-lm.synds.weights(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq, df, B52)
+lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq, df, weights = B52)
 
 'Column 3'
 df <- get_data(c("EF48", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40", "EF16U2"), target="EF48")
 table(df$B27_rec)
-lm.synds(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2, df)
+lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2, data=df)
 df <- get_data(c("EF48", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40", "B52", "EF16U2"), target="EF48")
 table(df$B27_rec)
-lm.synds.weights(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2, df, B52)
+lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2, df, weights = B52)
 
 'Column 4'
 df <- get_data(c("TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "EF40", "EF16U2", "LEISTUNGSGRUPPE", "B27", "EF48"), target="EF48")
-lm.synds(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2 + LEISTUNGSGRUPPE, df)
+lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2 + LEISTUNGSGRUPPE, data=df)
 df <- get_data(c("TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "EF40", "EF16U2", "LEISTUNGSGRUPPE", "B27", "EF48", "B52"), target="EF48")
 table(df$B27_rec)
-lm.synds.weights(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2 + LEISTUNGSGRUPPE, df, B52)
+lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2 + LEISTUNGSGRUPPE, df, weights = B52)
 
 'Replication of Bachmann et al. (2023), table 7'
 'Column 1'
 df_ft <- get_data_fulltime(c("EF48", "TAETIGKEITSSCHLUESSEL4"))
-lm.synds(log(EF48) ~ TAETIGKEITSSCHLUESSEL4, df_ft)
+lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4, data=df_ft)
 df_ft <- get_data_fulltime(c("EF48", "TAETIGKEITSSCHLUESSEL4", "B52"))
-lm.synds.weights(log(EF48) ~ TAETIGKEITSSCHLUESSEL4, df_ft, B52)
+lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4, df_ft, weights = B52)
 
 'Column 2'
 df_ft <- get_data_fulltime(c("EF48", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40"), target="EF48")
-lm.synds(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq, df_ft)
+lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq, data=df_ft)
 df_ft <- get_data_fulltime(c("EF48", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40", "B52"), target="EF48")
-lm.synds.weights(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq, df_ft, B52)
+lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq, df_ft, weights = B52)
 
 'Column 3'
 df_ft <- get_data_fulltime(c("EF48", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40", "EF16U2"), target="EF48")
-lm.synds(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2, df_ft)
+lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2, data=df_ft)
 df_ft <- get_data_fulltime(c("EF48", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40", "B52", "EF16U2"), target="EF48")
-lm.synds.weights(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2, df_ft, B52)
+lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2, df_ft, weights = B52)
 
 'Column 4'
 df_ft <- get_data_fulltime(c("TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "EF40", "EF16U2", "LEISTUNGSGRUPPE", "B27", "EF48"), target="EF48")
-lm.synds(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2 + LEISTUNGSGRUPPE, df_ft)
+lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2 + LEISTUNGSGRUPPE, data=df_ft)
 df_ft <- get_data_fulltime(c("TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "EF40", "EF16U2", "LEISTUNGSGRUPPE", "B27", "EF48", "B52"), target="EF48")
-lm.synds.weights(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2 + LEISTUNGSGRUPPE, df_ft, B52)
+lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2 + LEISTUNGSGRUPPE, df_ft, weights = B52)
 
 
 'Replication of Bachmann et al. (2023), figure 2'
