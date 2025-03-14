@@ -44,9 +44,6 @@ vse_AN_gwap_noNNA_PF$VERDIENSTGRUPPE[is.na(vse_AN_gwap_noNNA_PF$VERDIENSTGRUPPE)
 'Gross hourly income grouped by (non-)/temporary work'
 vse_AN_gwap_noNNA_PF$EF21H <- vse_AN_gwap_noNNA_PF$EF21 / vse_AN_gwap_noNNA_PF$EF19
 
-'Months of service'
-vse_AN_gwap_noNNA_PF$MONTHS_OF_SERVICE <- vse_AN_gwap_noNNA_PF$EF14U2 - vse_AN_gwap_noNNA_PF$EF12U2
-
 'Removal of duplet variables (according to dataset description)'
 #vse_AN_gwap_noNNA_PF <- vse_AN_gwap_noNNA_PF %>% dplyr::select(-one_of('VERDIENSTGRUPPE', 'LEISTUNGSGRUPPE', 'NUMVERDIENSTREGELUNG', 
 #                                                                 'GESCHLECHT', 'GEBURTSJAHR', 'B22', 'EINTRITTSMONAT', 'EINTRITTSJAHR', 

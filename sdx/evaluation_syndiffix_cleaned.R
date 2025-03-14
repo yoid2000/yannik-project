@@ -78,6 +78,11 @@ process_data <- function(df) {
     df$B27_rec <- ifelse(df$B27 == "FT", 1, 0)
   }
 
+  if ("EF14U2" %in% colnames(df) && "EF12U2" %in% colnames(df)) {
+    df$MONTHS_OF_SERVICE <- df$EF14U2 - df$EF12U2
+  }
+
+
   if ("TAETIGKEITSSCHLUESSEL5" %in% colnames(df)) {
     df <- subset(df, TAETIGKEITSSCHLUESSEL5 == 1| TAETIGKEITSSCHLUESSEL5 == 3)
   }
