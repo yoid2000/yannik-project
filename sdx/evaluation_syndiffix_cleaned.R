@@ -137,9 +137,9 @@ table(df$B27_rec)
 (fmean(df$B27_rec, df$TAETIGKEITSSCHLUESSEL4, df$B52)-1)
 
 # Months of service for the company
-df <- get_data(c("MONTHS_OF_SERVICE", "TAETIGKEITSSCHLUESSEL4"))
+df <- get_data(c("EF14U2", "EF12U2", "TAETIGKEITSSCHLUESSEL4"))
 'aggregate(df$MONTHS_OF_SERVICE, list(df$TAETIGKEITSSCHLUESSEL4), FUN=mean)*12'
-df <- get_data(c("MONTHS_OF_SERVICE", "TAETIGKEITSSCHLUESSEL4", "B52"))
+df <- get_data(c("EF14U2", "EF12U2", "TAETIGKEITSSCHLUESSEL4", "B52"))
 (fmean(df$MONTHS_OF_SERVICE, df$TAETIGKEITSSCHLUESSEL4, df$B52)*12)
 
 # Level of requirements grouped by (non-)/temporary work

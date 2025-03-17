@@ -14,7 +14,6 @@ def make_file_path(key):
     key = key.replace('TAETIGKEITSSCHLUESSEL', 'TS')
     key = key.replace('__', '_')
     key = key.replace('LEISTUNGSGRUPPE', 'LG')
-    key = key.replace('MONTHS_OF_SERVICE', 'MOS')
     file_path = os.path.join('sdx_tables', f'{key}.csv')
     return file_path
 

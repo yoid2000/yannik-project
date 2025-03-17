@@ -52,11 +52,11 @@
     "target": null
   },
   {
-    "columns": ["MONTHS_OF_SERVICE", "TAETIGKEITSSCHLUESSEL4"],
+    "columns": ["EF14U2", "EF12U2", "TAETIGKEITSSCHLUESSEL4"],
     "target": null
   },
   {
-    "columns": ["MONTHS_OF_SERVICE", "TAETIGKEITSSCHLUESSEL4", "B52"],
+    "columns": ["EF14U2", "EF12U2", "TAETIGKEITSSCHLUESSEL4", "B52"],
     "target": null
   },
   {
