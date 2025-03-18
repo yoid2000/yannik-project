@@ -35,6 +35,12 @@ for job in columns_list_python:
     target = job['target']
     file_key = make_file_key(columns, target)
     file_path = make_file_path(file_key)
+    # check to see if a file is already at file_path
+    if os.path.exists(file_path):
+        print(f"File already exists, skipping: {file_path}")
+        continue
+    else:
+        print(f"Creating file: {file_path}")
     df_temp = Synthesizer(df[columns], target_column=target).sample()
     df_temp.to_csv(file_path, index=False)
     if file_key in filekeys:
@@ -44,6 +50,11 @@ for job in columns_list_python:
     columns.append('TAETIGKEITSSCHLUESSEL5')
     file_key = make_file_key(columns, target)
     file_path = make_file_path(file_key)
+    if os.path.exists(file_path):
+        print(f"File already exists, skipping: {file_path}")
+        continue
+    else:
+        print(f"Creating file: {file_path}")
     df_temp = Synthesizer(df[columns], target_column=target).sample()
     df_temp.to_csv(file_path, index=False)
     if file_key in filekeys:
