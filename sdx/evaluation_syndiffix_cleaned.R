@@ -290,16 +290,16 @@ df_ft <- get_data_fulltime(c("EF48", "TAETIGKEITSSCHLUESSEL4", "B52"))
 'Column 1'
 df <- get_data(c("EF48", "TAETIGKEITSSCHLUESSEL4", "B52"))
 lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4, data=df)
-lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4, df, weights = B52)
+summary(lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4, df, weights = B52))
 
 'Column 2'
 df <- get_data(c("EF48", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40"), target="EF48")
 table(df$B27_rec)
-lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq, data=df)
+summary(lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq, data=df))
 
 df <- get_data(c("EF48", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40", "B52"), target="EF48")
 table(df$B27_rec)
-lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq, df, weights = B52)
+summary(lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq, df, weights = B52))
 
 'Column 3'
 df <- get_data(c("EF48", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40", "EF16U2"), target="EF48")
@@ -307,49 +307,49 @@ table(df$B27_rec)
 lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2, data=df)
 df <- get_data(c("EF48", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40", "B52", "EF16U2"), target="EF48")
 table(df$B27_rec)
-lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2, df, weights = B52)
+summary(lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2, df, weights = B52))
 
 'Column 4'
 df <- get_data(c("TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "EF40", "EF16U2", "LEISTUNGSGRUPPE", "B27", "EF48"), target="EF48")
 lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2 + LEISTUNGSGRUPPE, data=df)
 df <- get_data(c("TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "EF40", "EF16U2", "LEISTUNGSGRUPPE", "B27", "EF48", "B52"), target="EF48")
 table(df$B27_rec)
-lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2 + LEISTUNGSGRUPPE, df, weights = B52)
+summary(lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2 + LEISTUNGSGRUPPE, df, weights = B52))
 
 'Replication of Bachmann et al. (2023), table 7'
 'Column 1'
 df_ft <- get_data_fulltime(c("EF48", "TAETIGKEITSSCHLUESSEL4"))
 lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4, data=df_ft)
 df_ft <- get_data_fulltime(c("EF48", "TAETIGKEITSSCHLUESSEL4", "B52"))
-lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4, df_ft, weights = B52)
+summary(lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4, df_ft, weights = B52))
 
 'Column 2'
 df_ft <- get_data_fulltime(c("EF48", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40"), target="EF48")
 lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq, data=df_ft)
 df_ft <- get_data_fulltime(c("EF48", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40", "B52"), target="EF48")
-lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq, df_ft, weights = B52)
+summary(lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq, df_ft, weights = B52))
 
 'Column 3'
 df_ft <- get_data_fulltime(c("EF48", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40", "EF16U2"), target="EF48")
 lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2, data=df_ft)
 df_ft <- get_data_fulltime(c("EF48", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40", "B52", "EF16U2"), target="EF48")
-lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2, df_ft, weights = B52)
+summary(lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2, df_ft, weights = B52))
 
 'Column 4'
 df_ft <- get_data_fulltime(c("TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "EF40", "EF16U2", "LEISTUNGSGRUPPE", "B27", "EF48"), target="EF48")
 lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2 + LEISTUNGSGRUPPE, data=df_ft)
 df_ft <- get_data_fulltime(c("TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "EF40", "EF16U2", "LEISTUNGSGRUPPE", "B27", "EF48", "B52"), target="EF48")
-lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2 + LEISTUNGSGRUPPE, df_ft, weights = B52)
+summary(lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2 + LEISTUNGSGRUPPE, df_ft, weights = B52))
 
 
 'Replication of Bachmann et al. (2023), figure 2'
 #### Propensity score matching, fulltime
-df_ft <- get_data_fulltime(c("EF21", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "EF40", "EF16U2", "LEISTUNGSGRUPPE"), target="EF21")
+df <- get_data(c("EF48", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "EF40", "EF16U2", "LEISTUNGSGRUPPE"), target="EF48")
 
 'Propensity score matching and comparisons for matched and unmatched observations'
 m.out_01a <- matchit(TAETIGKEITSSCHLUESSEL4 ~ EF41 + EF41_sq + EF10 + EF40 + 
                     EF40_sq + EF16U2 + LEISTUNGSGRUPPE,
-                  data = df_ft,
+                  data = df,
                   method = "nearest",
                   distance = "glm",
                   link = "probit")
@@ -359,7 +359,9 @@ plot(m.out_01a, type = "density", interactive = FALSE,
 summary(m.out_01a, un = FALSE)
 
 'Effect for matched observations'
-fit_01a <- lm(log(EF21) ~ TAETIGKEITSSCHLUESSEL4 + EF40 + EF40_sq + EF41 + EF41_sq +
+
+
+fit_01a <- lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF40 + EF40_sq + EF41 + EF41_sq +
             EF10 + EF16U2 + LEISTUNGSGRUPPE,
           data = m.data_01a,
           weights = weights)
@@ -387,9 +389,13 @@ fit_02b <- lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4 + EF40 + EF40_sq + EF41 + EF41_
 fit_02b
 
 'Effect for unmatched observations'
-df_ft <- get_data_fulltime(c("EF21", "TAETIGKEITSSCHLUESSEL4"))
+'df_ft <- get_data_fulltime(c("EF21", "TAETIGKEITSSCHLUESSEL4"))
 summary(lm(log(EF21) ~ TAETIGKEITSSCHLUESSEL4,
            data = df_ft))
+'
+df <- get_data(c("EF48", "TAETIGKEITSSCHLUESSEL4"))
+summary(lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4,
+           data = df))
 
 df_ft <- get_data_fulltime(c("EF48", "TAETIGKEITSSCHLUESSEL4"))
 summary(lm(log(EF48) ~ TAETIGKEITSSCHLUESSEL4,
