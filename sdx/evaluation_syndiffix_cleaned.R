@@ -78,6 +78,7 @@ process_data <- function(df) {
     df$B27_rec <- ifelse(df$B27 == "FT", 1, 0)
   }
 
+  # EF14U2 is reporting year, EF12U2 is year of entry
   if ("EF14U2" %in% colnames(df) && "EF12U2" %in% colnames(df)) {
     df$MONTHS_OF_SERVICE <- df$EF14U2 - df$EF12U2
   }
@@ -206,13 +207,13 @@ lm2_table1 <- lm(log(EF21) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B2
 summary(lm2_table1)
 
 'Column 3'
-df <- get_data(c("EF21", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40", "EF16U2"), target="EF21")
-lm3_table1 <- lm(log(EF21) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2, data = df)
+df <- get_data(c("EF21", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40", "EF16U2", "B52"), target="EF21")
+lm3_table1 <- lm(log(EF21) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2, data = df, weights = B52)
 summary(lm3_table1)
 
 'Column 4'
-df <- get_data(c("EF21", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40", "EF16U2", "LEISTUNGSGRUPPE"), target="EF21")
-lm4_table1 <- lm(log(EF21) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2 + LEISTUNGSGRUPPE, data = df)
+df <- get_data(c("EF21", "TAETIGKEITSSCHLUESSEL4", "EF41", "EF10", "B27", "EF40", "EF16U2", "LEISTUNGSGRUPPE", "B52"), target="EF21")
+lm4_table1 <- lm(log(EF21) ~ TAETIGKEITSSCHLUESSEL4 + EF41 + EF41_sq + EF10 + B27_rec + EF40 + EF40_sq + EF16U2 + LEISTUNGSGRUPPE, data = df, weights = B52)
 summary(lm4_table1)
 
 'Replication of Bachmann et al. (2023), table 4'

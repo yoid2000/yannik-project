@@ -88,7 +88,15 @@
     "target": "EF21"
   },
   {
+    "columns": ["EF21", "TAETIGKEITSSCHLUESSEL4",  "EF41", "EF10", "B27", "EF40", "EF16U2", "B52"],
+    "target": "EF21"
+  },
+  {
     "columns": ["EF21", "TAETIGKEITSSCHLUESSEL4",  "EF41", "EF10", "B27", "EF40", "EF16U2", "LEISTUNGSGRUPPE"],
+    "target": "EF21"
+  },
+  {
+    "columns": ["EF21", "TAETIGKEITSSCHLUESSEL4",  "EF41", "EF10", "B27", "EF40", "EF16U2", "LEISTUNGSGRUPPE", "B52"],
     "target": "EF21"
   },
   {
