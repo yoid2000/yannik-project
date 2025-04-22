@@ -8,7 +8,14 @@ for col in ['PERSONENGRUPPE', 'EF16U2', 'TAETIGKEITSSCHLUESSEL5']:
     print(df[col].value_counts())
     print("\n")
 
-import pandas as pd
+# Count the number of rows in PERSONENGRUPPE == 101
+if len(df[df['PERSONENGRUPPE'] == 101]) == 0:
+    # set 50% or randomly selected rows in PERSONENGRUPPE to 101
+    df.loc[df.sample(frac=0.5).index, 'PERSONENGRUPPE'] = 101
+    # write the resulting dataframe to test_data.csv
+    df.to_csv("test_data.csv", index=False)
+print("Count rows where PERSONENGRUPPE == 101") 
+print(f"Count: {len(df[df['PERSONENGRUPPE'] == 101])}")
 
 print("Filter rows where EF16U2 != 7")
 df2 = df[df["EF16U2"] != 7]
